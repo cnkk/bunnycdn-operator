@@ -57,6 +57,16 @@ const getPullZones = async (): Promise<Array<IPullZone>> => {
   return res.data.Items;
 };
 
+const addHostnameToPullZone = async (pullzoneId: number, Hostname: string): Promise<void> => {
+  const url = `https://api.bunny.net/pullzone/${pullzoneId}/addHostname`;
+  const res = await axios.post(url, { Value: Hostname }, { headers: bunnyAPIHeaders });
+
+  if (res.status != 204) {
+
+    throw new Error(`Failed to add hostname ${Hostname} to pullzone ${pullzoneId}`);
+  }
+};
+
 type ICreatePullZoneProps = Pick<IPullZone, "Name" | "Type"> &
   Pick<Partial<IPullZone>, "StorageZoneId" | "OriginUrl"> &
   (Pick<IPullZone, "OriginUrl"> | Pick<IPullZone, "StorageZoneId">);
@@ -66,6 +76,9 @@ const getOrCreatePullZone = async (config: ICreatePullZoneProps): Promise<IPullZ
   const existingZone = zones.find(zone => zone.Name == config.Name);
   if (existingZone) {
     logger.debug(`Pull Zone ${config.Name} already exists (${existingZone.Id}), skipping creation...`);
+    
+    // check for additionalHostnames and add them if needed
+    await addHostnames(existingZone, config);
 
     return existingZone;
   } else {
@@ -218,3 +231,13 @@ export const getPullZoneCrStatusId = async (name: string, namespace: string, cus
     throw e;
   }
 };
+
+async function addHostnames(existingZone: IPullZone, config: ICreatePullZoneProps) {
+  const { Hostnames } = existingZone;
+  if (existingZone.Hostnames && Hostnames.length == 0) {
+    for (const hostname of Hostnames) {
+      await addHostnameToPullZone(existingZone.Id, config.Name);
+    }
+  }
+}
+

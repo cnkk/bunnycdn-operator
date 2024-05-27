@@ -33,6 +33,11 @@ spec:
               properties:
                 originUrl:
                   type: string
+                additionalHostnames:
+                  type: array
+                  items:
+                    type: string
+                  default: []
                 storageZoneId:
                   type: integer
                 storageZoneRef:

@@ -55,6 +55,7 @@ export interface PullZoneMeta extends V1ObjectMeta {
 
 export interface PullZoneSpec {
   originUrl?: string;
+  additionalHostnames?: string[];
   storageZoneId?: number;
   storageZoneRef?: {
     name: string;
